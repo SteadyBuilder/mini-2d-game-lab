@@ -9,5 +9,6 @@ export default defineConfig({
     target: 'esnext',
     outDir: 'dist',
     assetsDir: 'assets',
+    chunkSizeWarningLimit: 2000,
   },
 });

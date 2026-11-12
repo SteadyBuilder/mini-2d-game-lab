@@ -92,6 +92,9 @@ export class SandboxScene extends Phaser.Scene {
         D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
         SPACE: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       };
+      this.input.keyboard.on('keydown-R', () => {
+        this.scene.restart();
+      });
     }
 
     // 5. 마우스 / 터치 조작 이벤트 리스너
