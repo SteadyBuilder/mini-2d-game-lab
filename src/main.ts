@@ -3,14 +3,26 @@ import { SandboxScene } from './scenes/SandboxScene';
 import { NeonDodgerScene } from './scenes/NeonDodgerScene';
 import { GravityOrbitScene } from './scenes/GravityOrbitScene';
 import { NeonBreakerScene } from './scenes/NeonBreakerScene';
+import { ChronoRunnerScene } from './scenes/ChronoRunnerScene';
+import { ShadowCrawlerScene } from './scenes/ShadowCrawlerScene';
+import { CyberDaggerScene } from './scenes/CyberDaggerScene';
+import { NeonStackScene } from './scenes/NeonStackScene';
+import { BladeSlicerScene } from './scenes/BladeSlicerScene';
+import { GravityHookScene } from './scenes/GravityHookScene';
+import { ColorShiftScene } from './scenes/ColorShiftScene';
+import { PinballNeonScene } from './scenes/PinballNeonScene';
+import { BeatPulseScene } from './scenes/BeatPulseScene';
+import { MagneticMergeScene } from './scenes/MagneticMergeScene';
+
 import { PROJECTS } from './projects';
 import { ProjectMeta } from './types';
+import { sound } from './utils/audio';
 
 // Phaser Game Instance
 let game: Phaser.Game | null = null;
 let currentProject: ProjectMeta | null = null;
 
-// Phaser Game Config
+// Phaser Game Config: 모바일 세로 화면 기준 (450 x 800, 9:16 비율)
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game-container',
@@ -18,8 +30,8 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1280,
-    height: 720,
+    width: 450,
+    height: 800,
   },
   physics: {
     default: 'arcade',
@@ -28,8 +40,26 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  // 모든 씬 등록 (초기 자동 실행 없이 런처에서 선택 시 실행)
-  scene: [SandboxScene, NeonDodgerScene, GravityOrbitScene, NeonBreakerScene],
+  input: {
+    activePointers: 3, // 모바일 멀티터치 지원 (양손 조작)
+  },
+  // 총 14종의 모바일 미니게임 씬 등록
+  scene: [
+    SandboxScene,
+    NeonDodgerScene,
+    GravityOrbitScene,
+    NeonBreakerScene,
+    ChronoRunnerScene,
+    ShadowCrawlerScene,
+    CyberDaggerScene,
+    NeonStackScene,
+    BladeSlicerScene,
+    GravityHookScene,
+    ColorShiftScene,
+    PinballNeonScene,
+    BeatPulseScene,
+    MagneticMergeScene,
+  ],
 };
 
 // ================= Background Canvas Animation =================
@@ -50,14 +80,14 @@ function initBackgroundParticles() {
   const particles: { x: number; y: number; r: number; vx: number; vy: number; alpha: number; color: string }[] = [];
   const colors = ['#00f0ff', '#ff007f', '#00ff88', '#ffe600', '#a855f7'];
 
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 40; i++) {
     particles.push({
       x: Math.random() * width,
       y: Math.random() * height,
       r: Math.random() * 2 + 0.8,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      alpha: Math.random() * 0.6 + 0.2,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      alpha: Math.random() * 0.5 + 0.2,
       color: colors[Math.floor(Math.random() * colors.length)],
     });
   }
@@ -66,7 +96,7 @@ function initBackgroundParticles() {
     if (!ctx) return;
     ctx.clearRect(0, 0, width, height);
 
-    for (let p of particles) {
+    for (const p of particles) {
       p.x += p.vx;
       p.y += p.vy;
 
@@ -103,6 +133,7 @@ const navGameName = document.getElementById('nav-game-name') as HTMLElement;
 const navGameBadge = document.getElementById('nav-game-badge') as HTMLElement;
 const hintBadge = document.getElementById('hint-badge') as HTMLElement;
 const hintText = document.getElementById('hint-text') as HTMLElement;
+const playableCount = document.getElementById('playable-count') as HTMLElement;
 
 let selectedCategory = 'all';
 let searchQuery = '';
@@ -124,12 +155,16 @@ function renderProjectCards() {
     return matchesCategory && matchesSearch;
   });
 
+  if (playableCount) {
+    playableCount.textContent = `${PROJECTS.filter((p) => p.status === 'ready').length} Playable Games`;
+  }
+
   if (filtered.length === 0) {
     projectsGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
-        <div style="font-size: 36px; margin-bottom: 12px;">🔍</div>
-        <div style="font-size: 16px; font-weight: 600; color: #94a3b8;">일치하는 프로토타입이 없습니다.</div>
-        <div style="font-size: 13px; margin-top: 4px;">다른 검색어나 카테고리를 선택해 보세요.</div>
+      <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: #64748b;">
+        <div style="font-size: 36px; margin-bottom: 10px;">🔍</div>
+        <div style="font-size: 15px; font-weight: 600; color: #94a3b8;">일치하는 모바일 미니게임이 없습니다.</div>
+        <div style="font-size: 13px; margin-top: 4px;">다른 검색어나 카테고리 탭을 선택해 보세요.</div>
       </div>
     `;
     return;
@@ -180,7 +215,7 @@ function renderProjectCards() {
 
         <div class="card-footer">
           <button class="btn-launch ${!isReady ? 'disabled' : ''}">
-            <span>${isReady ? '프로토타입 실행 🚀' : '준비 중 (WIP) ⏳'}</span>
+            <span>${isReady ? '플레이 시작 🚀' : '준비 중 (WIP) ⏳'}</span>
           </button>
         </div>
       </div>
@@ -188,6 +223,7 @@ function renderProjectCards() {
 
     if (isReady) {
       card.addEventListener('click', () => {
+        sound.playTap();
         launchProject(proj);
       });
     }
@@ -218,7 +254,7 @@ function launchProject(project: ProjectMeta) {
 
   // Update In-Game Navbar
   if (navGameIcon) navGameIcon.textContent = project.icon;
-  if (navGameName) navGameName.textContent = project.title;
+  if (navGameName) navGameName.textContent = project.title.split(':')[0].trim();
   if (navGameBadge) {
     navGameBadge.textContent = project.category.toUpperCase();
     navGameBadge.style.color = project.accentColor;
@@ -243,8 +279,8 @@ function launchProject(project: ProjectMeta) {
 }
 
 function returnToHub() {
+  sound.playTap();
   if (game && currentProject) {
-    // Pause or stop current scene
     const activeScene = game.scene.getScene(currentProject.sceneKey);
     if (activeScene && activeScene.scene.isActive()) {
       activeScene.scene.stop();
@@ -258,13 +294,13 @@ function returnToHub() {
     gameBottomHint.style.opacity = '0';
   }
 
-  // Reset URL hash
   if (window.location.hash) {
     history.pushState(null, '', window.location.pathname);
   }
 }
 
 function restartCurrentProject() {
+  sound.playTap();
   if (game && currentProject) {
     const activeScene = game.scene.getScene(currentProject.sceneKey);
     if (activeScene) {
@@ -273,7 +309,20 @@ function restartCurrentProject() {
   }
 }
 
+function toggleAudio() {
+  const isMuted = sound.toggleMute();
+  updateSoundButtonIcons(isMuted);
+}
+
+function updateSoundButtonIcons(isMuted: boolean) {
+  const soundBtns = document.querySelectorAll('.btn-sound-toggle');
+  soundBtns.forEach((btn) => {
+    btn.textContent = isMuted ? '🔇' : '🔊';
+  });
+}
+
 function toggleFullscreen() {
+  sound.playTap();
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => {});
   } else {
@@ -285,6 +334,7 @@ function toggleFullscreen() {
 window.addEventListener('load', () => {
   initBackgroundParticles();
   renderProjectCards();
+  updateSoundButtonIcons(sound.isMuted);
 
   // Search input
   if (searchInput) {
@@ -298,6 +348,7 @@ window.addEventListener('load', () => {
   if (categoryFilters) {
     categoryFilters.querySelectorAll('.category-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
+        sound.playTap();
         categoryFilters.querySelectorAll('.category-pill').forEach((p) => p.classList.remove('active'));
         btn.classList.add('active');
         selectedCategory = btn.getAttribute('data-category') || 'all';
@@ -318,6 +369,11 @@ window.addEventListener('load', () => {
     restartBtn.addEventListener('click', restartCurrentProject);
   }
 
+  // Sound toggle buttons
+  document.querySelectorAll('.btn-sound-toggle').forEach((btn) => {
+    btn.addEventListener('click', toggleAudio);
+  });
+
   // Fullscreen buttons
   const fsBtn = document.getElementById('btn-fullscreen');
   const hubFsBtn = document.getElementById('hub-btn-fullscreen');
@@ -326,11 +382,8 @@ window.addEventListener('load', () => {
 
   // Global Keyboard Navigation
   window.addEventListener('keydown', (e: KeyboardEvent) => {
-    // ESC to return to Hub
-    if (e.key === 'Escape') {
-      if (currentProject) {
-        returnToHub();
-      }
+    if (e.key === 'Escape' && currentProject) {
+      returnToHub();
     }
   });
 

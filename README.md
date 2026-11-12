@@ -1,79 +1,53 @@
-# 🎮 Mini 2D Game Lab (미니 2D 게임 실험실)
+# 📱 Mini 2D Game Lab (모바일 미니 2D 게임 실험실)
 
-> 다양한 2D 게임 메커니즘, 물리 시뮬레이션, 조작계를 브라우저에서 신속하게 구현하고 테스트할 수 있는 **인터랙티브 2D 게임 프로토타이핑 샌드박스 & 프로젝트 허브**입니다.  
-> **Phaser 3**, **Vite**, **TypeScript**를 기반으로 하며, Vercel 즉시 배포를 지원합니다.
-
----
-
-## 🌟 주요 특징 및 UI/UX
-
-1. **멋진 아케이드 런처 & 프로젝트 허브 (Project Hub)**
-   - **사이버펑크 네온 테마**: 모던 다크 글래스모피즘(Glassmorphism)과 반응형 파티클 배경 효과.
-   - **카테고리 필터링**: 전체, 아케이드(Arcade), 물리 시뮬레이션(Physics), 조작 샌드박스(Sandbox).
-   - **실시간 검색**: 프로젝트 타이틀, 부제목, 태그, 키워드 검색 지원.
-   - **조작계 및 난이도 안내**: 각 미니 프로젝트마다 조작 키와 난이도 뱃지 미리보기 제공.
-   - **URL 해시 라우팅**: `#project=neon-dodger`와 같이 URL 공유로 특정 프로젝트 즉시 진입 가능.
-
-2. **인게임 상단 네비게이션 & 빠른 전환**
-   - **허브 복귀**: `ESC` 단축키 또는 상단 `[← Hub로 돌아가기]` 버튼 클릭으로 언제든 목록으로 즉시 복귀.
-   - **원클릭 재시작**: `R` 키 또는 상단 `[🔄]` 버튼으로 실시간 리셋.
-   - **전체화면 모드**: `[⛶]` 버튼으로 몰입감 있는 플레이.
+> 모바일 화면(세로 9:16 비율)을 기준으로 설계된 **모바일 퍼스트 인터랙티브 2D 게임 프로토타이핑 연구소**입니다.  
+> 터치 제스처, 아날로그 조이스틱, 칼꽂기 타이밍, 절단 슬라이스, 진자 로프 비행, 리듬 탭, 물리 병합 등 게임 개발 영감을 자극하는 **14종의 완성된 모바일 미니게임**을 브라우저에서 즉시 플레이할 수 있습니다.  
+> **Phaser 3**, **Vite**, **TypeScript**, **Web Audio API**를 기반으로 하며 반응형 모바일 터치 및 Vercel 즉시 배포를 완벽 지원합니다.
 
 ---
 
-## 🕹️ 탑재된 미니 프로젝트 라인업
+## 🌟 모바일 퍼스트 주요 특징 & UX 개선
 
-| 프로젝트명 | 카테고리 | 특징 & 메커니즘 | 조작법 |
-|---|---|---|---|
-| **⚡ Cyber Dash Sandbox** | Sandbox | 네온 플레이어, 부드러운 감속 및 순간 가속 대시(Dash), 트레일 파티클, 실시간 디버그 HUD | WASD / 방향키 / 마우스, `Space` 대시 |
-| **🎯 Neon Dodger : Pulse Survival** | Arcade | 사방에서 쏟아지는 레이저 탄막 회피, 에너지 코어 수집, 실시간 점수 및 실드 시스템 | WASD / 방향키 / 마우스 터치 드래그 |
-| **🪐 Gravity Orbit : Star Thruster** | Physics | 중앙 중력원의 인력장과 무중력 관성 비행, 소행성 충돌 회피, 우주 크리스탈 채굴 및 연료 관리 | `A/D` 회전, `W` 스러스터 추진 / 마우스 조준 |
-| **💎 Neon Breaker : Particle Smash** | Arcade | 사이버펑크 네온 패들 벽돌깨기, 동적 반사 물리 및 스테이지 클리어 메커니즘 | 마우스 좌우 이동, 클릭/`Space` 발사 |
-| **⚡ Chrono Runner (WIP)** | Arcade | 네온 그리드 위를 질주하는 절차적 생성 러닝 프로토타입 (준비 중) | `Space` 점프 |
-| **🕯️ Shadow Crawler (WIP)** | Sandbox | 동적 시야(FOV) 및 2D 레이캐스팅 조명 던전 탐험 프로토타입 (준비 중) | WASD / 마우스 조명 |
+1. **모바일 세로 화면(450 x 800) 최적화 캔버스**
+   - 최신 스마트폰(iPhone, Galaxy) 세로 화면 비율에 맞춘 `Phaser.Scale.FIT` 뷰포트.
+   - 데스크톱과 모바일 어디서 접속하든 화면 중앙에 완벽한 비율로 자동 스케일링.
+   - 노치 및 하단 바를 고려한 Safe-Area(`env(safe-area-inset-top)`, `env(safe-area-inset-bottom)`) 대응.
+
+2. **완벽한 모바일 터치 인터랙션 & 온스크린 컨트롤**
+   - **가상 아날로그 조이스틱 (`VirtualJoystick`)**: 부드러운 360도 엄지 이동 제어.
+   - **온스크린 터치 액션 버튼 (`TouchActionButton`)**: 대시, 회전, 스러스터 분사 등 촉각적 반응.
+   - **제스처 기반 조작**: 스와이프 베기, 슬링샷 드래그 & 발사, 원터치 탭, 터치 & 홀드 진자 스윙.
+   - **멀티터치(Multi-touch) 지원**: 양손 엄지를 활용한 동시 조작 지원.
+
+3. **절차적 Web Audio 사운드 & 모바일 햅틱 진동**
+   - 별도 대용량 오디오 에셋 다운로드 없이 내장 Web Audio API 신디사이저로 타격음, 점프음, 콤보 멜로디, 폭발음, 클리어 팡파레 실시간 합성.
+   - 실기기 모바일 진동(`navigator.vibrate`) 연동으로 손끝에 전해지는 짜릿한 타격감.
+   - 상단 네비게이션 및 허브에서 원터치 사운드 켜기/끄기(🔊/🔇) 지원.
+
+4. **엄지 친화적 모바일 허브 UI**
+   - 원핸드 엄지 조작이 편리한 상단 바, 스와이프 가능한 카테고리 필터 탭.
+   - 카드 터치 시 즉시 실행되며, 인게임에서 `[✕ 나가기]` 버튼으로 언제든 복귀 가능.
 
 ---
 
-## 🧪 새로운 미니 프로젝트 추가 방법
+## 🕹️ 탑재된 14종의 모바일 미니게임 라인업
 
-새로운 2D 미니게임을 추가하는 과정이 매우 간단하도록 모듈화되어 있습니다:
-
-1. **`src/scenes/`에 새로운 Phaser 씬 생성**
-   - 예: `src/scenes/MyNewGameScene.ts`
-   ```typescript
-   import Phaser from 'phaser';
-   export class MyNewGameScene extends Phaser.Scene {
-     constructor() { super({ key: 'MyNewGameScene' }); }
-     // preload, create, update 구현...
-   }
-   ```
-
-2. **`src/projects.ts`에 프로젝트 메타데이터 등록**
-   ```typescript
-   {
-     id: 'my-game',
-     title: 'My Awesome Game',
-     subtitle: 'Prototype Subtitle',
-     description: '프로젝트 설명...',
-     category: 'arcade',
-     tags: ['Phaser 3', 'Arcade'],
-     icon: '🚀',
-     badge: 'NEW',
-     accentColor: '#00f0ff',
-     accentGlow: 'rgba(0, 240, 255, 0.35)',
-     sceneKey: 'MyNewGameScene',
-     difficulty: 'Medium',
-     status: 'ready',
-     controls: [
-       { key: 'WASD', action: '이동' },
-     ],
-   }
-   ```
-
-3. **`src/main.ts`의 scene 배열에 클래스 추가**
-   - `scene: [SandboxScene, NeonDodgerScene, GravityOrbitScene, NeonBreakerScene, MyNewGameScene]`
-
-등록 즉시 허브 화면의 카드 그리드, 카테고리 필터, 검색에 자동 반영됩니다!
+| 아이콘 | 게임 타이틀 | 장르 | 핵심 메커니즘 & 영감 포인트 | 모바일 조작법 |
+|:---:|---|:---:|---|---|
+| ⚡ | **Cyber Dash Sandbox** | Sandbox | 가상 아날로그 조이스틱과 순간 대시, 네온 발광 파티클 잔상 | 🕹️ 가상 조이스틱 + ⚡ DASH 버튼 |
+| 🏃 | **Chrono Runner : Neon Rush** | Arcade | 점차 가속되는 절차적 무한 러너, 2단 점프 및 저자세 슬라이딩 | 👆 우측 탭 점프 / 👇 좌측 탭 슬라이드 |
+| 🗡️ | **Cyber Dagger : Spin Target** | Arcade | 불규칙 반전 회전 코어에 기존 단검을 피해 꽂아넣는 칼꽂기 액션 | 👆 원터치 탭 (칼 던지기) |
+| 🧱 | **Neon Stack : Tower Precision** | Arcade | 오차를 물리 절단하며 높이 쌓아올리는 정밀 스택 타워 (콤보 신스음) | 👆 화면 탭 (블록 적재) |
+| ⚔️ | **Blade Slicer : Shape Katana** | Arcade | 날아오는 기하학 코어를 손가락으로 베어내는 카타나 슬라이서 | 👆 손가락 드래그 (네온 검광 베기) |
+| 🪝 | **Gravity Hook : Swing Velocity** | Physics | 천장 마그네틱 노드에 로프를 걸어 진자 운동 가속 후 방출 비행 | 👆 화면 홀드(로프 연결) / 🖐️ 떼기(방출) |
+| 🌈 | **Color Shift : Chromatic Gate** | Arcade | 중력 바운스 점프로 자신과 같은 색상의 회전 링만 통과하는 게임 | 👆 화면 탭 (상방 바운스 점프) |
+| 🎯 | **Pinball Neon : Slingshot Drop** | Physics | 슬링샷으로 각도/파워를 조절해 고득점 범퍼와 하단 바스켓을 공략하는 핀볼 | 🏹 하방 드래그 조준 / 🖐️ 손 떼기 발사 |
+| 🎵 | **Beat Pulse : Rhythm Tap** | Rhythm | 4개 레인을 타고 내려오는 신스웨이브 비트 노트 타이밍 판정 | 👆 하단 4개 레인 직접 탭 (또는 D,F,J,K) |
+| 🔮 | **Magnetic Merge : 2048 Drop** | Puzzle | 같은 숫자의 네온 볼들이 중력 충돌하여 상위 볼로 병합 팝업되는 퍼즐 | ↔ 좌우 드래그 조준 / 🖐️ 떼기 낙하 |
+| 🕯️ | **Shadow Crawler : Infiltration** | Sandbox | 동적 시야(FOV)와 감시 드론의 적색 감시망을 피해 데이터 해킹 탈출 | 🕹️ 가상 조이스틱 / 👆 직접 터치 드래그 |
+| 🎯 | **Neon Dodger : Pulse Survival** | Arcade | 사방에서 몰려드는 고속 펄스 탄막을 손가락 드래그로 회피하며 생존 | 👆 손가락 드래그 (정밀 회피 기동) |
+| 🪐 | **Gravity Orbit : Star Thruster** | Physics | 중앙 거대 중력원의 인력장과 관성을 고려한 우주선 궤도 비행 및 채굴 | ◀ ▶ 좌우 회전 버튼 + 🚀 스러스터 버튼 |
+| 💎 | **Neon Breaker : Particle Smash** | Arcade | 모바일 세로 비율 5열 벽돌 배치와 손가락 드래그 패들 반사각 제어 | ↔ 손가락 드래그 (패들) / 👆 탭 발사 |
 
 ---
 
@@ -83,10 +57,10 @@
 # 1. 의존성 설치
 npm install
 
-# 2. 로컬 개발 서버 시작 (Hot Reload 지원)
+# 2. 로컬 개발 서버 시작 (모바일 브라우저나 개발자 도구 Device Toolbar에서 테스트)
 npm run dev
 
-# 3. 배포용 빌드 (타입 체크 및 Vite 빌드)
+# 3. 배포용 빌드 (타입스크립트 검사 & Vite 프로덕션 번들링)
 npm run build
 
 # 4. 빌드 결과물 미리보기
@@ -95,8 +69,7 @@ npm run preview
 
 ---
 
-## 🌐 Vercel에 배포하기
+## 🌐 모바일 테스트 팁
 
-이 레포지토리는 Vercel 프리셋(`vercel.json`)이 이미 구성되어 있어 즉시 배포할 수 있습니다:
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
+- 브라우저 개발자 도구(F12)의 **Device Mode (Ctrl+Shift+M)** 를 켜고 `iPhone 14/15 Pro`, `Pixel 7`, `Galaxy S20` 등의 모바일 뷰포트에서 터치 조작 및 화면 비율을 테스트해보세요.
+- 모바일 기기 브라우저에서 직접 접속 시 주소창 숨김 및 전체화면 모드(`⛶`)로 더욱 쾌적하게 즐길 수 있습니다.

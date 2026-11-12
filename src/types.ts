@@ -8,7 +8,7 @@ export interface ProjectMeta {
   title: string;
   subtitle: string;
   description: string;
-  category: 'sandbox' | 'arcade' | 'physics';
+  category: 'sandbox' | 'arcade' | 'physics' | 'rhythm' | 'puzzle';
   tags: string[];
   icon: string;
   badge?: string;

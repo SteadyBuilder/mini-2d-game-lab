@@ -2,17 +2,21 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Mini 2D Game Lab - Interactive Prototyping Sandbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#07090e" />
+    <title>Mini 2D Game Lab - Mobile First Prototyping</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
         --bg-main: #07090e;
-        --bg-surface: rgba(15, 23, 42, 0.75);
-        --bg-surface-hover: rgba(30, 41, 59, 0.85);
-        --border-color: rgba(255, 255, 255, 0.08);
+        --bg-surface: rgba(15, 23, 42, 0.85);
+        --bg-surface-hover: rgba(30, 41, 59, 0.95);
+        --border-color: rgba(255, 255, 255, 0.09);
         --border-glow: rgba(0, 240, 255, 0.4);
         --accent-cyan: #00f0ff;
         --accent-pink: #ff007f;
@@ -22,6 +26,8 @@
         --text-primary: #f8fafc;
         --text-secondary: #94a3b8;
         --text-muted: #64748b;
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
       }
 
       * {
@@ -30,6 +36,7 @@
         padding: 0;
         user-select: none;
         -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
       }
 
       html, body {
@@ -39,18 +46,20 @@
         background-color: var(--bg-main);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         color: var(--text-primary);
+        touch-action: manipulation;
       }
 
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
+        height: 6px;
       }
       ::-webkit-scrollbar-track {
         background: rgba(10, 15, 25, 0.5);
       }
       ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 240, 255, 0.5);
@@ -68,6 +77,17 @@
         opacity: 0.6;
       }
 
+      /* Main Screen Wrapper: Mobile viewport centering on desktop */
+      #app-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+      }
+
       /* Game Container */
       #game-container {
         position: absolute;
@@ -81,25 +101,31 @@
         z-index: 1;
         background: #000;
       }
+
       canvas {
         display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
 
-      /* In-Game Top Navigation Bar */
+      /* In-Game Top Navigation Bar (Mobile Thumb-Friendly) */
       #game-navbar {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        height: 54px;
-        background: rgba(7, 9, 14, 0.88);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        height: calc(52px + var(--safe-top));
+        padding-top: var(--safe-top);
+        background: rgba(7, 9, 14, 0.92);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         border-bottom: 1px solid var(--border-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 20px;
+        padding-left: 14px;
+        padding-right: 14px;
         z-index: 100;
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
         transform: translateY(-100%);
@@ -116,44 +142,49 @@
       .nav-left, .nav-right {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
       }
 
       .btn-hub-return {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.16);
         color: #fff;
-        padding: 6px 14px;
+        padding: 6px 12px;
         border-radius: 8px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
+        min-height: 38px;
       }
-      .btn-hub-return:hover {
-        background: rgba(0, 240, 255, 0.2);
+      .btn-hub-return:active {
+        background: rgba(0, 240, 255, 0.25);
         border-color: var(--accent-cyan);
         color: var(--accent-cyan);
-        box-shadow: 0 0 16px rgba(0, 240, 255, 0.3);
+        transform: scale(0.97);
       }
 
       .nav-game-title {
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         color: #fff;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        max-width: 160px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .nav-badge {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        padding: 2px 7px;
-        border-radius: 6px;
+        padding: 2px 6px;
+        border-radius: 5px;
         text-transform: uppercase;
         font-family: 'Fira Code', monospace;
       }
@@ -162,8 +193,8 @@
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid var(--border-color);
         color: var(--text-secondary);
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
         border-radius: 8px;
         display: flex;
         align-items: center;
@@ -172,32 +203,38 @@
         font-size: 14px;
         transition: all 0.2s ease;
       }
-      .nav-icon-btn:hover {
+      .nav-icon-btn:active {
         color: #fff;
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: scale(0.95);
       }
 
       /* In-Game Bottom Quick Hint */
       #game-bottom-hint {
         position: fixed;
-        bottom: 14px;
+        bottom: calc(14px + var(--safe-bottom));
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(7, 9, 14, 0.85);
-        backdrop-filter: blur(8px);
+        background: rgba(7, 9, 14, 0.88);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border: 1px solid var(--border-color);
-        border-radius: 24px;
-        padding: 6px 18px;
+        border-radius: 20px;
+        padding: 6px 14px;
         color: var(--text-secondary);
-        font-size: 12px;
+        font-size: 11px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         z-index: 100;
         pointer-events: none;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         transition: opacity 0.3s ease;
+        max-width: 92%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       /* ================= HUB / LAUNCHER UI OVERLAY ================= */
@@ -210,10 +247,11 @@
         z-index: 50;
         display: flex;
         flex-direction: column;
-        background: radial-gradient(circle at 50% 0%, #151d2f 0%, #07090e 70%);
+        background: radial-gradient(circle at 50% 0%, #151d30 0%, #07090e 75%);
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         opacity: 1;
-        transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       #hub-overlay.hidden {
@@ -226,12 +264,12 @@
       .hub-header {
         position: sticky;
         top: 0;
-        z-index: 10;
-        background: rgba(7, 9, 14, 0.7);
+        z-index: 20;
+        background: rgba(7, 9, 14, 0.85);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid var(--border-color);
-        padding: 16px 36px;
+        padding: calc(12px + var(--safe-top)) 16px 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -240,38 +278,38 @@
       .brand {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
       }
 
       .brand-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
         background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        font-size: 18px;
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
       }
 
       .brand-title {
-        font-size: 18px;
+        font-size: 15px;
         font-weight: 800;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.3px;
         color: #fff;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
       }
 
       .brand-version {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 700;
         background: rgba(0, 240, 255, 0.15);
         color: var(--accent-cyan);
         border: 1px solid rgba(0, 240, 255, 0.3);
-        padding: 2px 6px;
+        padding: 2px 5px;
         border-radius: 4px;
         font-family: 'Fira Code', monospace;
       }
@@ -279,32 +317,33 @@
       .header-actions {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
       }
 
       .stats-chip {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 12px;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
         color: var(--text-secondary);
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border-color);
-        padding: 6px 14px;
-        border-radius: 20px;
+        padding: 5px 10px;
+        border-radius: 16px;
       }
       .stats-dot {
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
         background: var(--accent-green);
         box-shadow: 0 0 8px var(--accent-green);
       }
 
-      /* Hub Hero Section */
+      /* Hub Hero Section (Mobile Optimized) */
       .hub-hero {
-        padding: 40px 36px 20px;
-        max-width: 1320px;
+        padding: 20px 16px 12px;
+        max-width: 900px;
         margin: 0 auto;
         width: 100%;
       }
@@ -312,22 +351,22 @@
       .hero-tag {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         color: var(--accent-cyan);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
-        letter-spacing: 1.2px;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
         font-family: 'Fira Code', monospace;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
 
       .hero-title {
-        font-size: 38px;
+        font-size: 26px;
         font-weight: 900;
-        letter-spacing: -1px;
-        line-height: 1.2;
-        margin-bottom: 12px;
+        letter-spacing: -0.6px;
+        line-height: 1.25;
+        margin-bottom: 8px;
         background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -335,22 +374,19 @@
 
       .hero-desc {
         color: var(--text-secondary);
-        font-size: 15px;
-        max-width: 720px;
-        line-height: 1.6;
+        font-size: 13px;
+        line-height: 1.55;
       }
 
       /* Filter & Search Bar */
       .hub-controls {
-        max-width: 1320px;
-        margin: 20px auto 10px;
-        padding: 0 36px;
+        max-width: 900px;
+        margin: 8px auto;
+        padding: 0 16px;
         width: 100%;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 10px;
       }
 
       .category-pills {
@@ -358,43 +394,48 @@
         align-items: center;
         gap: 8px;
         overflow-x: auto;
-        padding: 4px 0;
+        -webkit-overflow-scrolling: touch;
+        padding: 4px 0 8px;
+        scrollbar-width: none;
+      }
+      .category-pills::-webkit-scrollbar {
+        display: none;
       }
 
       .category-pill {
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border-color);
         color: var(--text-secondary);
-        padding: 7px 16px;
-        border-radius: 20px;
-        font-size: 13px;
+        padding: 7px 14px;
+        border-radius: 18px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
         white-space: nowrap;
+        flex-shrink: 0;
       }
-      .category-pill:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
+      .category-pill:active {
+        transform: scale(0.96);
       }
       .category-pill.active {
         background: var(--accent-cyan);
         border-color: var(--accent-cyan);
         color: #07090e;
-        box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
       }
 
       .search-box {
         position: relative;
-        min-width: 260px;
+        width: 100%;
       }
 
       .search-input {
         width: 100%;
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 8px 14px 8px 36px;
+        border-radius: 10px;
+        padding: 9px 12px 9px 36px;
         color: #fff;
         font-size: 13px;
         outline: none;
@@ -403,7 +444,7 @@
       .search-input:focus {
         border-color: var(--accent-cyan);
         background: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
       }
       .search-icon {
         position: absolute;
@@ -415,15 +456,27 @@
         pointer-events: none;
       }
 
-      /* Projects Grid */
+      /* Projects Grid (Mobile-First single or 2-column) */
       .projects-grid {
-        max-width: 1320px;
-        margin: 16px auto 60px;
-        padding: 0 36px;
+        max-width: 900px;
+        margin: 12px auto calc(40px + var(--safe-bottom));
+        padding: 0 16px;
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-        gap: 24px;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      @media (min-width: 640px) {
+        .projects-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .projects-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
       }
 
       /* Project Card */
@@ -432,24 +485,23 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
+        border-radius: 14px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         position: relative;
         cursor: pointer;
       }
 
-      .project-card:hover {
-        transform: translateY(-6px);
-        background: var(--bg-surface-hover);
+      .project-card:active {
+        transform: scale(0.98);
         border-color: var(--card-accent, var(--accent-cyan));
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 24px var(--card-glow, rgba(0, 240, 255, 0.25));
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 18px var(--card-glow, rgba(0, 240, 255, 0.25));
       }
 
       .card-banner {
-        height: 130px;
+        height: 110px;
         position: relative;
         background: linear-gradient(135deg, rgba(20, 27, 45, 0.9), rgba(10, 15, 25, 0.95));
         overflow: hidden;
@@ -463,7 +515,7 @@
         position: absolute;
         inset: 0;
         opacity: 0.15;
-        background-size: 24px 24px;
+        background-size: 20px 20px;
         background-image: 
           linear-gradient(to right, rgba(255, 255, 255, 0.3) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
@@ -471,33 +523,25 @@
 
       .card-banner-glow {
         position: absolute;
-        width: 140px;
-        height: 140px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
-        filter: blur(40px);
+        filter: blur(35px);
         opacity: 0.45;
-        transition: opacity 0.3s ease;
-      }
-      .project-card:hover .card-banner-glow {
-        opacity: 0.8;
       }
 
       .card-icon {
         position: relative;
-        font-size: 44px;
+        font-size: 40px;
         z-index: 2;
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
-      }
-      .project-card:hover .card-icon {
-        transform: scale(1.15) rotate(4deg);
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
       }
 
       .card-top-badges {
         position: absolute;
-        top: 12px;
-        left: 12px;
-        right: 12px;
+        top: 10px;
+        left: 10px;
+        right: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -505,74 +549,74 @@
       }
 
       .card-badge {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 700;
-        padding: 3px 8px;
-        border-radius: 6px;
+        padding: 3px 7px;
+        border-radius: 5px;
         font-family: 'Fira Code', monospace;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
         text-transform: uppercase;
       }
 
       .card-difficulty {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--text-muted);
-        background: rgba(0, 0, 0, 0.5);
-        padding: 2px 7px;
+        background: rgba(0, 0, 0, 0.55);
+        padding: 2px 6px;
         border-radius: 4px;
         font-family: 'Fira Code', monospace;
       }
 
       .card-body {
-        padding: 20px;
+        padding: 16px;
         display: flex;
         flex-direction: column;
         flex: 1;
       }
 
       .card-title {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 700;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
         color: #fff;
       }
 
       .card-subtitle {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-muted);
         font-family: 'Fira Code', monospace;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
 
       .card-desc {
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.5;
         color: var(--text-secondary);
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         flex: 1;
       }
 
       .card-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 16px;
+        gap: 5px;
+        margin-bottom: 12px;
       }
 
       .tag-pill {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--text-secondary);
         background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 2px 8px;
-        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 2px 7px;
+        border-radius: 5px;
       }
 
       .card-controls {
-        background: rgba(0, 0, 0, 0.25);
+        background: rgba(0, 0, 0, 0.35);
         border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 16px;
+        padding: 8px 10px;
+        margin-bottom: 14px;
         display: flex;
         flex-direction: column;
         gap: 4px;
@@ -585,23 +629,21 @@
         font-size: 11px;
       }
       .control-key {
-        font-family: 'Fira Code', monospace;
+        font-family: 'Inter', sans-serif;
         color: #fff;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 1px 6px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 2px 6px;
         border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-weight: 600;
       }
       .control-action {
         color: var(--text-muted);
       }
 
       .card-footer {
-        padding-top: 14px;
+        padding-top: 10px;
         border-top: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
       }
 
       .btn-launch {
@@ -609,10 +651,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: 10px;
-        font-size: 14px;
+        gap: 6px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
         font-weight: 700;
         cursor: pointer;
         border: none;
@@ -620,42 +662,20 @@
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
         color: #fff;
         border: 1px solid rgba(255, 255, 255, 0.15);
+        min-height: 42px;
       }
 
-      .project-card:hover .btn-launch {
+      .project-card:hover .btn-launch,
+      .project-card:active .btn-launch {
         background: var(--card-accent, var(--accent-cyan));
         color: #07090e;
         border-color: var(--card-accent, var(--accent-cyan));
-        box-shadow: 0 0 16px var(--card-glow, rgba(0, 240, 255, 0.4));
+        box-shadow: 0 0 14px var(--card-glow, rgba(0, 240, 255, 0.4));
       }
 
       .btn-launch.disabled {
         opacity: 0.45;
         cursor: not-allowed;
-        background: rgba(255, 255, 255, 0.04) !important;
-        color: var(--text-muted) !important;
-        border-color: var(--border-color) !important;
-        box-shadow: none !important;
-      }
-
-      /* Responsive Adjustments */
-      @media (max-width: 768px) {
-        .hub-header {
-          padding: 14px 20px;
-        }
-        .hub-hero {
-          padding: 24px 20px 16px;
-        }
-        .hero-title {
-          font-size: 26px;
-        }
-        .hub-controls {
-          padding: 0 20px;
-        }
-        .projects-grid {
-          padding: 0 20px;
-          grid-template-columns: 1fr;
-        }
       }
     </style>
   </head>
@@ -663,23 +683,28 @@
     <!-- Background Canvas for Particles -->
     <canvas id="bg-canvas"></canvas>
 
-    <!-- Phaser 3 Canvas Container -->
-    <div id="game-container"></div>
+    <!-- App Wrapper -->
+    <div id="app-wrapper">
+      <!-- Phaser 3 Canvas Container -->
+      <div id="game-container"></div>
+    </div>
 
     <!-- In-Game Floating Top Navigation Bar -->
     <div id="game-navbar">
       <div class="nav-left">
-        <button class="btn-hub-return" id="btn-back-to-hub" title="프로젝트 허브로 돌아가기 (ESC)">
-          <span>← Hub로 돌아가기</span>
-          <span style="font-size: 10px; opacity: 0.6; font-family: 'Fira Code', monospace;">[ESC]</span>
+        <button class="btn-hub-return" id="btn-back-to-hub" title="프로젝트 허브로 돌아가기">
+          <span>✕ 나가기</span>
         </button>
         <div class="nav-game-title">
           <span id="nav-game-icon">⚡</span>
-          <span id="nav-game-name">Cyber Dash Sandbox</span>
+          <span id="nav-game-name">Cyber Dash</span>
           <span id="nav-game-badge" class="nav-badge" style="background: rgba(0, 240, 255, 0.2); color: #00f0ff;">SANDBOX</span>
         </div>
       </div>
       <div class="nav-right">
+        <button class="nav-icon-btn btn-sound-toggle" title="사운드 켜기/끄기">
+          🔊
+        </button>
         <button class="nav-icon-btn" id="btn-restart" title="재시작 (R)">
           🔄
         </button>
@@ -692,7 +717,7 @@
     <!-- In-Game Bottom Quick Hint -->
     <div id="game-bottom-hint" style="opacity: 0;">
       <span id="hint-badge" class="nav-badge" style="background: #238636; color: white;">Controls</span>
-      <span id="hint-text">WASD / 방향키 / 마우스 조작</span>
+      <span id="hint-text">터치 & 드래그 조작</span>
     </div>
 
     <!-- ================= HUB / LAUNCHER UI OVERLAY ================= -->
@@ -702,14 +727,17 @@
         <div class="brand">
           <div class="brand-icon">🎮</div>
           <div class="brand-title">
-            <span>MINI 2D GAME LAB</span>
-            <span class="brand-version">v1.2.0</span>
+            <span>MINI 2D LAB</span>
+            <span class="brand-version">MOBILE</span>
           </div>
         </div>
         <div class="header-actions">
+          <button class="nav-icon-btn btn-sound-toggle" title="사운드 켜기/끄기">
+            🔊
+          </button>
           <div class="stats-chip">
             <span class="stats-dot"></span>
-            <span id="playable-count">4 Playable Prototypes</span>
+            <span id="playable-count">14 Playable Games</span>
           </div>
           <button class="nav-icon-btn" id="hub-btn-fullscreen" title="전체화면 모드">
             ⛶
@@ -719,24 +747,26 @@
 
       <!-- Hero Header -->
       <section class="hub-hero">
-        <div class="hero-tag">⚡ Fast Prototyping & Physics Sandbox</div>
-        <h1 class="hero-title">실험실의 프로토타입을 선택하세요</h1>
+        <div class="hero-tag">📱 Mobile-First 2D Game Lab</div>
+        <h1 class="hero-title">모바일 미니게임 연구소</h1>
         <p class="hero-desc">
-          다양한 2D 게임 메커니즘, 물리 시뮬레이션, 탄막 회피, 반응 속도 실험을 브라우저에서 바로 플레이하고 테스트할 수 있는 인터랙티브 연구소입니다.
+          터치 제스처, 아날로그 조이스틱, 절단 물리, 진자 스윙, 리듬 탭, 물리 병합 등 게임 개발 영감을 주는 14종의 모바일 인터랙티브 미니게임입니다.
         </p>
       </section>
 
       <!-- Category Filter & Search -->
       <div class="hub-controls">
         <div class="category-pills" id="category-filters">
-          <button class="category-pill active" data-category="all">✨ 전체 프로젝트</button>
+          <button class="category-pill active" data-category="all">✨ 전체 (All)</button>
           <button class="category-pill" data-category="arcade">🎯 아케이드 (Arcade)</button>
           <button class="category-pill" data-category="physics">🪐 물리 시뮬레이션 (Physics)</button>
+          <button class="category-pill" data-category="rhythm">🎵 리듬 탭 (Rhythm)</button>
+          <button class="category-pill" data-category="puzzle">🔮 물리 퍼즐 (Puzzle)</button>
           <button class="category-pill" data-category="sandbox">⚡ 조작 샌드박스 (Sandbox)</button>
         </div>
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="project-search" class="search-input" placeholder="프로젝트명, 태그 검색..." />
+          <input type="text" id="project-search" class="search-input" placeholder="미니게임명, 메커니즘 검색..." />
         </div>
       </div>
 

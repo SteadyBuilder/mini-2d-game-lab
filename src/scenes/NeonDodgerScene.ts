@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { sound } from '../utils/audio';
 
 export class NeonDodgerScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -30,7 +31,7 @@ export class NeonDodgerScene extends Phaser.Scene {
   }
 
   preload() {
-    // 1. 플레이어 텍스처 (마젠타/네온 퍼플)
+    // 1. 플레이어 텍스처
     if (!this.textures.exists('dodger_player')) {
       const gfx = this.make.graphics({ x: 0, y: 0 });
       gfx.fillStyle(0xff007f, 0.3);
@@ -43,7 +44,7 @@ export class NeonDodgerScene extends Phaser.Scene {
       gfx.destroy();
     }
 
-    // 2. 투사체 탄막 텍스처 (네온 옐로우/오렌지)
+    // 2. 투사체 탄막 텍스처
     if (!this.textures.exists('neon_bullet')) {
       const gfx = this.make.graphics({ x: 0, y: 0 });
       gfx.fillStyle(0xffaa00, 0.4);
@@ -54,7 +55,7 @@ export class NeonDodgerScene extends Phaser.Scene {
       gfx.destroy();
     }
 
-    // 3. 수집용 에너지 코어 텍스처 (네온 에메랄드)
+    // 3. 에너지 코어 텍스처
     if (!this.textures.exists('energy_core')) {
       const gfx = this.make.graphics({ x: 0, y: 0 });
       gfx.fillStyle(0x00ffaa, 0.4);
@@ -77,7 +78,7 @@ export class NeonDodgerScene extends Phaser.Scene {
     // 배경 그리드
     this.createBackground(width, height);
 
-    // 플레이어 생성
+    // 플레이어 생성 (화면 중앙)
     this.player = this.physics.add.sprite(width / 2, height / 2, 'dodger_player');
     this.player.setCollideWorldBounds(true);
     this.player.setCircle(16, 8, 8);
@@ -87,7 +88,7 @@ export class NeonDodgerScene extends Phaser.Scene {
     this.projectiles = this.physics.add.group();
     this.energyCores = this.physics.add.group();
 
-    // 탄막 충돌
+    // 탄막 피격 충돌
     this.physics.add.overlap(this.player, this.projectiles, (_, bullet) => {
       bullet.destroy();
       this.takeDamage();
@@ -99,7 +100,7 @@ export class NeonDodgerScene extends Phaser.Scene {
       this.collectCore();
     });
 
-    // 입력 설정
+    // 키보드 설정
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasdKeys = {
@@ -108,22 +109,19 @@ export class NeonDodgerScene extends Phaser.Scene {
         S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
         D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
       };
-      // 재시작 단축키 R
       this.input.keyboard.on('keydown-R', () => {
-        if (this.isGameOver) {
-          this.scene.restart();
-        }
+        this.scene.restart();
       });
     }
 
-    // 마우스/터치
+    // 모바일 터치 드래그 추적
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.isPointerDown = true;
-      this.pointerTarget = new Phaser.Math.Vector2(pointer.worldX, pointer.worldY);
+      this.pointerTarget = new Phaser.Math.Vector2(pointer.x, pointer.y);
     });
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.isPointerDown) {
-        this.pointerTarget = new Phaser.Math.Vector2(pointer.worldX, pointer.worldY);
+        this.pointerTarget = new Phaser.Math.Vector2(pointer.x, pointer.y);
       }
     });
     this.input.on('pointerup', () => {
@@ -131,38 +129,38 @@ export class NeonDodgerScene extends Phaser.Scene {
       this.pointerTarget = null;
     });
 
-    // HUD
-    this.scoreText = this.add.text(24, 24, 'SCORE: 0', {
+    // 모바일 HUD (좌우 정렬)
+    this.scoreText = this.add.text(18, 18, 'SCORE: 0', {
       fontFamily: 'monospace',
-      fontSize: '20px',
+      fontSize: '15px',
+      fontStyle: 'bold',
       color: '#00ffaa',
-      backgroundColor: 'rgba(10, 14, 23, 0.8)',
-      padding: { x: 12, y: 6 },
-    });
+      backgroundColor: 'rgba(7, 9, 14, 0.85)',
+      padding: { x: 8, y: 5 },
+    }).setDepth(100);
 
-    this.hpText = this.add.text(200, 24, 'SHIELD: ❤❤❤', {
+    this.hpText = this.add.text(width - 18, 18, 'SHIELD: ❤❤❤', {
       fontFamily: 'monospace',
-      fontSize: '20px',
+      fontSize: '15px',
+      fontStyle: 'bold',
       color: '#ff007f',
-      backgroundColor: 'rgba(10, 14, 23, 0.8)',
-      padding: { x: 12, y: 6 },
-    });
+      backgroundColor: 'rgba(7, 9, 14, 0.85)',
+      padding: { x: 8, y: 5 },
+    }).setOrigin(1, 0).setDepth(100);
 
-    // 스폰 타이머 (탄막)
+    // 스폰 타이머
     this.spawnTimer = this.time.addEvent({
-      delay: 350,
+      delay: 380,
       callback: () => this.spawnBullet(width, height),
       loop: true,
     });
 
-    // 코어 스폰 타이머
     this.coreTimer = this.time.addEvent({
-      delay: 2500,
+      delay: 2400,
       callback: () => this.spawnCore(width, height),
       loop: true,
     });
 
-    // 생존 점수 타이머
     this.scoreTimer = this.time.addEvent({
       delay: 100,
       callback: () => {
@@ -174,13 +172,12 @@ export class NeonDodgerScene extends Phaser.Scene {
       loop: true,
     });
 
-    // 게임 오버 UI 컨테이너
     this.createGameOverUI(width, height);
   }
 
   private createBackground(width: number, height: number) {
     const gfx = this.add.graphics();
-    gfx.lineStyle(1, 0x1f1633, 0.8);
+    gfx.lineStyle(1, 0x1f1633, 0.7);
     for (let x = 0; x <= width; x += 40) {
       gfx.moveTo(x, 0);
       gfx.lineTo(x, height);
@@ -195,7 +192,6 @@ export class NeonDodgerScene extends Phaser.Scene {
   private spawnBullet(width: number, height: number) {
     if (this.isGameOver) return;
 
-    // 화면 테두리 사방 중 한 곳에서 생성
     const side = Phaser.Math.Between(0, 3);
     let startX = 0;
     let startY = 0;
@@ -219,39 +215,35 @@ export class NeonDodgerScene extends Phaser.Scene {
 
     bullet.setCircle(7, 5, 5);
 
-    // 플레이어를 향해 약간의 오차를 두고 발사
-    const targetX = this.player.x + Phaser.Math.Between(-80, 80);
-    const targetY = this.player.y + Phaser.Math.Between(-80, 80);
+    const targetX = this.player.x + Phaser.Math.Between(-60, 60);
+    const targetY = this.player.y + Phaser.Math.Between(-60, 60);
     const angle = Phaser.Math.Angle.Between(startX, startY, targetX, targetY);
-    const speed = Phaser.Math.Between(220, 380) + Math.min(this.score * 0.1, 200);
+    const speed = Phaser.Math.Between(220, 360) + Math.min(this.score * 0.08, 160);
 
     bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 
-    // 화면 밖으로 나가면 삭제
-    this.time.delayedCall(6000, () => {
+    this.time.delayedCall(5500, () => {
       if (bullet.active) bullet.destroy();
     });
   }
 
   private spawnCore(width: number, height: number) {
     if (this.isGameOver) return;
-    const x = Phaser.Math.Between(60, width - 60);
-    const y = Phaser.Math.Between(60, height - 60);
+    const x = Phaser.Math.Between(50, width - 50);
+    const y = Phaser.Math.Between(70, height - 70);
     const core = this.energyCores.create(x, y, 'energy_core') as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     if (!core) return;
-    core.setCircle(10, 6, 6);
 
-    // 펄스 애니메이션
+    core.setCircle(10, 6, 6);
     this.tweens.add({
       targets: core,
       scale: 1.25,
       yoyo: true,
       repeat: -1,
-      duration: 600,
+      duration: 550,
     });
 
-    // 10초 후 미획득 시 자동 소멸
-    this.time.delayedCall(10000, () => {
+    this.time.delayedCall(9000, () => {
       if (core.active) core.destroy();
     });
   }
@@ -259,12 +251,16 @@ export class NeonDodgerScene extends Phaser.Scene {
   private collectCore() {
     this.score += 50;
     this.scoreText.setText(`SCORE: ${this.score}`);
-    this.cameras.main.flash(120, 0, 255, 170, true);
+    sound.playScore(1.3);
+    sound.vibrate(20);
+    this.cameras.main.flash(80, 0, 255, 170, false);
   }
 
   private takeDamage() {
     if (this.isGameOver) return;
     this.hp -= 1;
+    sound.playExplode();
+    sound.vibrate(60);
     this.cameras.main.shake(150, 0.015);
     this.hpText.setText(`SHIELD: ${'❤'.repeat(Math.max(0, this.hp))}`);
 
@@ -275,6 +271,7 @@ export class NeonDodgerScene extends Phaser.Scene {
 
   private handleGameOver() {
     this.isGameOver = true;
+    sound.playGameOver();
     this.player.setVelocity(0, 0);
     this.projectiles.setVelocity(0, 0);
     this.spawnTimer?.remove();
@@ -282,41 +279,48 @@ export class NeonDodgerScene extends Phaser.Scene {
     this.scoreTimer?.remove();
 
     this.gameOverContainer.setVisible(true);
-    const finalScoreText = this.gameOverContainer.getAt(1) as Phaser.GameObjects.Text;
-    finalScoreText.setText(`FINAL SCORE: ${this.score}`);
+    const finalScoreText = this.gameOverContainer.getByName('end_score') as Phaser.GameObjects.Text;
+    if (finalScoreText) {
+      finalScoreText.setText(`최종 점수: ${this.score}`);
+    }
   }
 
   private createGameOverUI(width: number, height: number) {
-    const bg = this.add.rectangle(0, 0, 480, 240, 0x090d16, 0.92);
-    bg.setStrokeStyle(2, 0xff007f);
+    this.gameOverContainer = this.add.container(width / 2, height / 2);
+    this.gameOverContainer.setDepth(2000);
+    this.gameOverContainer.setVisible(false);
+
+    const backdrop = this.add.rectangle(0, 0, width, height, 0x07090e, 0.88);
 
     const title = this.add.text(0, -60, 'SURVIVAL FAILED', {
-      fontFamily: 'monospace',
-      fontSize: '28px',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '26px',
       fontStyle: 'bold',
       color: '#ff007f',
     }).setOrigin(0.5);
 
-    const score = this.add.text(0, -10, 'FINAL SCORE: 0', {
+    const score = this.add.text(0, -10, '최종 점수: 0', {
       fontFamily: 'monospace',
-      fontSize: '20px',
-      color: '#ffffff',
-    }).setOrigin(0.5);
-
-    const restartBtn = this.add.text(0, 45, '🔄 Press R or Click to Restart', {
-      fontFamily: 'sans-serif',
       fontSize: '16px',
       color: '#00ffaa',
-      backgroundColor: 'rgba(0, 255, 170, 0.15)',
-      padding: { x: 16, y: 8 },
+    }).setOrigin(0.5);
+    score.setName('end_score');
+
+    const restartBtn = this.add.text(0, 60, '🔄 화면을 터치하여 재시작', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '15px',
+      fontStyle: 'bold',
+      color: '#07090e',
+      backgroundColor: '#00ffaa',
+      padding: { x: 18, y: 10 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     restartBtn.on('pointerdown', () => {
+      sound.playTap();
       this.scene.restart();
     });
 
-    this.gameOverContainer = this.add.container(width / 2, height / 2, [bg, score, title, restartBtn]);
-    this.gameOverContainer.setVisible(false);
+    this.gameOverContainer.add([backdrop, title, score, restartBtn]);
   }
 
   update() {
@@ -336,9 +340,10 @@ export class NeonDodgerScene extends Phaser.Scene {
     if (up) moveY -= 1;
     if (down) moveY += 1;
 
+    // 터치 드래그 위치 추적
     if (moveX === 0 && moveY === 0 && this.isPointerDown && this.pointerTarget) {
       const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.pointerTarget.x, this.pointerTarget.y);
-      if (distance > 15) {
+      if (distance > 12) {
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.pointerTarget.x, this.pointerTarget.y);
         moveX = Math.cos(angle);
         moveY = Math.sin(angle);

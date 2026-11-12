@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { sound } from '../utils/audio';
 
 export class NeonBreakerScene extends Phaser.Scene {
   private paddle!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -22,10 +23,10 @@ export class NeonBreakerScene extends Phaser.Scene {
     if (!this.textures.exists('breaker_paddle')) {
       const gfx = this.make.graphics({ x: 0, y: 0 });
       gfx.fillStyle(0x00f0ff, 1);
-      gfx.fillRoundedRect(0, 0, 120, 18, 9);
+      gfx.fillRoundedRect(0, 0, 96, 18, 9);
       gfx.fillStyle(0xffffff, 0.8);
-      gfx.fillRoundedRect(10, 4, 100, 4, 2);
-      gfx.generateTexture('breaker_paddle', 120, 18);
+      gfx.fillRoundedRect(8, 4, 80, 4, 2);
+      gfx.generateTexture('breaker_paddle', 96, 18);
       gfx.destroy();
     }
 
@@ -40,7 +41,7 @@ export class NeonBreakerScene extends Phaser.Scene {
       gfx.destroy();
     }
 
-    // 3. 브릭 텍스처 3종 (색상별)
+    // 3. 브릭 텍스처 4종 (모바일 세로 폭 450px에 최적화: 폭 68px, 높이 24px)
     const brickColors = [
       { key: 'brick_cyan', color: 0x00f0ff },
       { key: 'brick_magenta', color: 0xff007f },
@@ -52,10 +53,10 @@ export class NeonBreakerScene extends Phaser.Scene {
       if (!this.textures.exists(key)) {
         const gfx = this.make.graphics({ x: 0, y: 0 });
         gfx.fillStyle(color, 0.9);
-        gfx.fillRoundedRect(0, 0, 72, 24, 4);
+        gfx.fillRoundedRect(0, 0, 68, 22, 4);
         gfx.lineStyle(1.5, 0xffffff, 0.6);
-        gfx.strokeRoundedRect(0, 0, 72, 24, 4);
-        gfx.generateTexture(key, 72, 24);
+        gfx.strokeRoundedRect(0, 0, 68, 22, 4);
+        gfx.generateTexture(key, 68, 22);
         gfx.destroy();
       }
     });
@@ -67,26 +68,27 @@ export class NeonBreakerScene extends Phaser.Scene {
     this.lives = 3;
     this.ballLaunched = false;
 
-    // 패들
-    this.paddle = this.physics.add.sprite(width / 2, height - 60, 'breaker_paddle');
+    // 패들 (하단 70px)
+    this.paddle = this.physics.add.sprite(width / 2, height - 70, 'breaker_paddle');
     this.paddle.setCollideWorldBounds(true);
     this.paddle.setImmovable(true);
 
     // 공
-    this.ball = this.physics.add.sprite(width / 2, height - 85, 'breaker_ball');
+    this.ball = this.physics.add.sprite(width / 2, height - 95, 'breaker_ball');
     this.ball.setCollideWorldBounds(true);
     this.ball.setBounce(1, 1);
     this.ball.setCircle(9, 1, 1);
 
-    // 벽돌 그룹
+    // 벽돌 그룹 (5열 x 6행)
     this.bricks = this.physics.add.staticGroup();
     this.generateBricks(width);
 
-    // 충돌
+    // 충돌 처리
     this.physics.add.collider(this.ball, this.paddle, () => {
-      // 패들의 맞은 위치에 따른 반사각 계산
       const diff = this.ball.x - this.paddle.x;
-      this.ball.setVelocityX(diff * 7);
+      this.ball.setVelocityX(diff * 8.5);
+      sound.playHit();
+      sound.vibrate(15);
       this.cameras.main.shake(60, 0.005);
     });
 
@@ -94,80 +96,88 @@ export class NeonBreakerScene extends Phaser.Scene {
       brick.destroy();
       this.score += 20;
       this.scoreText.setText(`SCORE: ${this.score}`);
-      this.cameras.main.flash(50, 255, 255, 255, true);
+      sound.playBounce();
+      sound.vibrate(12);
+      this.cameras.main.flash(40, 255, 255, 255, false);
 
       if (this.bricks.countActive() === 0) {
-        this.messageText.setText('STAGE CLEAR! Press SPACE to restart');
+        sound.playClear();
+        this.messageText.setText('STAGE CLEAR! 터치하여 재시작');
         this.messageText.setVisible(true);
         this.ball.setVelocity(0, 0);
         this.ballLaunched = false;
       }
     });
 
-    // 입력
+    // 키보드 지원
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.input.keyboard.on('keydown-SPACE', () => {
-        if (!this.ballLaunched) {
-          this.launchBall();
-        }
+        if (!this.ballLaunched) this.launchBall();
       });
-      this.input.keyboard.on('keydown-R', () => {
-        this.scene.restart();
-      });
+      this.input.keyboard.on('keydown-R', () => this.scene.restart());
     }
 
-    // 마우스 패들 추적 및 클릭 발사
+    // 모바일 터치 드래그 패들 이동 및 탭 발사
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.paddle.x = Phaser.Math.Clamp(pointer.worldX, 60, width - 60);
+      this.paddle.x = Phaser.Math.Clamp(pointer.x, 50, width - 50);
       if (!this.ballLaunched) {
         this.ball.x = this.paddle.x;
       }
     });
 
-    this.input.on('pointerdown', () => {
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.paddle.x = Phaser.Math.Clamp(pointer.x, 50, width - 50);
       if (!this.ballLaunched) {
-        this.launchBall();
+        if (this.lives <= 0 || this.bricks.countActive() === 0) {
+          this.scene.restart();
+        } else {
+          this.launchBall();
+        }
       }
     });
 
     // HUD
-    this.scoreText = this.add.text(24, 20, 'SCORE: 0', {
+    this.scoreText = this.add.text(18, 16, 'SCORE: 0', {
       fontFamily: 'monospace',
-      fontSize: '20px',
+      fontSize: '15px',
+      fontStyle: 'bold',
       color: '#ffe600',
-      backgroundColor: 'rgba(10, 15, 25, 0.8)',
-      padding: { x: 12, y: 6 },
-    });
+      backgroundColor: 'rgba(7, 9, 14, 0.85)',
+      padding: { x: 8, y: 5 },
+    }).setDepth(100);
 
-    this.livesText = this.add.text(220, 20, 'BALLS: ●●●', {
+    this.livesText = this.add.text(width - 18, 16, 'BALLS: ●●●', {
       fontFamily: 'monospace',
-      fontSize: '20px',
+      fontSize: '15px',
+      fontStyle: 'bold',
       color: '#00f0ff',
-      backgroundColor: 'rgba(10, 15, 25, 0.8)',
-      padding: { x: 12, y: 6 },
-    });
+      backgroundColor: 'rgba(7, 9, 14, 0.85)',
+      padding: { x: 8, y: 5 },
+    }).setOrigin(1, 0).setDepth(100);
 
-    this.messageText = this.add.text(width / 2, height / 2 + 60, 'CLICK OR SPACE TO LAUNCH', {
-      fontFamily: 'monospace',
-      fontSize: '22px',
+    this.messageText = this.add.text(width / 2, height / 2 + 50, '👆 화면을 탭하여 공 발사!', {
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '16px',
+      fontStyle: 'bold',
       color: '#ffffff',
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      padding: { x: 20, y: 10 },
-    }).setOrigin(0.5);
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: { x: 16, y: 8 },
+    }).setOrigin(0.5).setDepth(100);
   }
 
   private generateBricks(width: number) {
     const keys = ['brick_lime', 'brick_cyan', 'brick_magenta', 'brick_purple'];
-    const rows = 4;
-    const cols = 12;
-    const startX = (width - (cols * 82)) / 2 + 40;
-    const startY = 90;
+    const rows = 6;
+    const cols = 5;
+    const brickWidth = 74;
+    const startX = (width - cols * brickWidth) / 2 + brickWidth / 2;
+    const startY = 80;
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const x = startX + c * 82;
-        const y = startY + r * 34;
+        const x = startX + c * brickWidth;
+        const y = startY + r * 30;
         this.bricks.create(x, y, keys[r % keys.length]);
       }
     }
@@ -176,37 +186,40 @@ export class NeonBreakerScene extends Phaser.Scene {
   private launchBall() {
     this.ballLaunched = true;
     this.messageText.setVisible(false);
-    this.ball.setVelocity(Phaser.Math.Between(-150, 150), -420);
+    sound.playJump();
+    this.ball.setVelocity(Phaser.Math.Between(-140, 140), -450);
   }
 
   private resetBall() {
     this.ballLaunched = false;
     this.ball.setVelocity(0, 0);
-    this.ball.setPosition(this.paddle.x, this.scale.height - 85);
-    this.messageText.setText('CLICK OR SPACE TO LAUNCH');
+    this.ball.setPosition(this.paddle.x, this.scale.height - 95);
+    this.messageText.setText('👆 화면을 탭하여 공 발사!');
     this.messageText.setVisible(true);
   }
 
   update() {
     const { width, height } = this.scale;
 
-    // 키보드 패들 조작
+    // 키보드 조작 보조
     if (this.cursors?.left?.isDown) {
-      this.paddle.x = Math.max(60, this.paddle.x - 9);
+      this.paddle.x = Math.max(50, this.paddle.x - 9);
       if (!this.ballLaunched) this.ball.x = this.paddle.x;
     } else if (this.cursors?.right?.isDown) {
-      this.paddle.x = Math.min(width - 60, this.paddle.x + 9);
+      this.paddle.x = Math.min(width - 50, this.paddle.x + 9);
       if (!this.ballLaunched) this.ball.x = this.paddle.x;
     }
 
-    // 공이 바닥으로 떨어진 경우
-    if (this.ball.y > height) {
+    // 공 탈락
+    if (this.ball.y > height + 20) {
       this.lives -= 1;
+      sound.playExplode();
+      sound.vibrate(50);
       this.livesText.setText(`BALLS: ${'●'.repeat(Math.max(0, this.lives))}`);
       if (this.lives > 0) {
         this.resetBall();
       } else {
-        this.messageText.setText('GAME OVER! Press R to Retry');
+        this.messageText.setText('GAME OVER! 탭하여 재도전');
         this.messageText.setVisible(true);
       }
     }
