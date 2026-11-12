@@ -1,0 +1,25 @@
+{
+  "name": "mini-2d-game-lab",
+  "version": "1.0.0",
+  "description": "Fast 2D Game Prototyping Sandbox powered by Phaser 3 & Vite",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SteadyBuilder/mini-2d-game-lab.git"
+  },
+  "keywords": ["phaser", "phaser3", "vite", "gamedev", "2d-game", "sandbox", "vercel"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "phaser": "^3.88.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0"
+  }
+}
