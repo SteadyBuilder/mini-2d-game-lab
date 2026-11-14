@@ -13,6 +13,7 @@ import { ColorShiftScene } from './scenes/ColorShiftScene';
 import { PinballNeonScene } from './scenes/PinballNeonScene';
 import { BeatPulseScene } from './scenes/BeatPulseScene';
 import { MagneticMergeScene } from './scenes/MagneticMergeScene';
+import { NeonCarSandboxScene } from './scenes/NeonCarSandboxScene';
 
 import { PROJECTS } from './projects';
 import { ProjectMeta } from './types';
@@ -43,9 +44,10 @@ const config: Phaser.Types.Core.GameConfig = {
   input: {
     activePointers: 3, // 모바일 멀티터치 지원 (양손 조작)
   },
-  // 총 14종의 모바일 미니게임 씬 등록
+  // 총 15종의 모바일 미니게임 씬 등록
   scene: [
     SandboxScene,
+    NeonCarSandboxScene,
     NeonDodgerScene,
     GravityOrbitScene,
     NeonBreakerScene,
